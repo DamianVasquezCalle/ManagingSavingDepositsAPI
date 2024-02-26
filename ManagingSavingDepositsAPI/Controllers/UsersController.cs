@@ -14,8 +14,8 @@ namespace ManagingSavingDepositsAPI.Controllers
 			_context = context;
 		}
 
-		[HttpGet]
-		public IEnumerable<User> Get()
+		[HttpGet("size/{size}/page/{page}/sort/{sort}")]
+		public IEnumerable<User> Get(int size, int page, string sort)
 		{
 			return _context.Users.ToList();
 		}
