@@ -17,10 +17,18 @@ namespace ManagingSavingDepositsAPI.Controllers
 		[HttpGet("size/{size}/page/{page}/sort/{sort}")]
 		public IEnumerable<User> Get(int size, int page, string sort)
 		{
-			return _context.Users.ToList();
+			if (size < 1) return new List<User>();
+			if (size > 20) size = 20;
+
+			var recordsToSkip = (page > 0 ? page - 1 : 0) * size;
+			var users = _context.Users;
+			var sortedUsers = sort == "ASC" ? users.OrderBy(x => x.Id).ToList() : users.OrderByDescending(x => x.Id).ToList();
+
+			return sortedUsers.Skip(recordsToSkip).Take(size).ToList();
 		}
 
 		[HttpGet("{id}")]
+		[ProducesResponseType(typeof(User), 200)]
 		public async Task<IActionResult> Get(int id)
 		{
 			var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == id);
@@ -28,13 +36,16 @@ namespace ManagingSavingDepositsAPI.Controllers
 		}
 
 		[HttpPost]
-		public void Post([FromBody] User user)
+		[ProducesResponseType(typeof(User), 200)]
+		public IActionResult Post([FromBody] User user)
 		{
-			_context.Users.Add(user);
+			var response = _context.Users.Add(user);
 			_context.SaveChanges();
+			return Ok(response.Entity);
 		}
 
 		[HttpPut("{id}")]
+		[ProducesResponseType(typeof(User), 200)]
 		public async Task<IActionResult> Put(int id, [FromBody] User user)
 		{
 			if (id != user.Id)
@@ -50,7 +61,7 @@ namespace ManagingSavingDepositsAPI.Controllers
 
 			_context.Entry(initUser).CurrentValues.SetValues(user);
 			_context.SaveChanges();
-			return Ok();
+			return Ok(user);
 		}
 
 		[HttpDelete("{id}")]
